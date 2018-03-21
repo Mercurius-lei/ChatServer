@@ -128,17 +128,128 @@
 
 ### 三、详细设计
 
-#### 1.  接口定义
+#### 1.  消息格式
 
-（1）注册（添加对应顺序图）
+通信采用WebSocket实现，传输的消息采用Json进行封装，结构如下：
+
+{
+
+​	method：“xxx”，
+
+​	param{
+
+​		...
+
+​	}	
+
+}
+
+| 参数名 | 参数含义                 | 参数类型 | 必选 |
+| ------ | ------------------------ | -------- | ---- |
+| method | 表明此次传输的消息的用途 | String   | 是   |
+| param  | 表明此次传输的消息的内容 |          |      |
+
+#### 2.接口定义
+
+（1）注册
+
+Bool userRegister(const String userID, const String userPasswd)
+
+收到的消息格式为
+
+{
+
+​	method：“login”，
+
+​	param{
+
+​		userName: "aaa",
+
+​		userPasswd:"bbb",
+
+​	}	
+
+}
+
+| 参数名     | 参数含义                   | 参数类型 | 必选 |
+| ---------- | -------------------------- | -------- | ---- |
+| userName   | 表明传输此消息的用户名     | String   | 是   |
+| userPasswd | 表明传输此消息的用户的密码 | String   | 是   |
 
 （2）登录
 
+Bool userLogin(const String userID, const String userPasswd)
+
+对应的消息格式为
+
+{
+
+​	method：“register”，
+
+​	param{
+
+​		userName: "aaa",
+
+​		userPasswd:"bbb",
+
+​	}	
+
+}
+
+| 参数名     | 参数含义                   | 参数类型 | 必选 |
+| ---------- | -------------------------- | -------- | ---- |
+| userName   | 表明传输此消息的用户名     | String   | 是   |
+| userPasswd | 表明传输此消息的用户的密码 | String   | 是   |
+
 （3）单聊
+
+String personalChat(const String srcUserID, const String data, const String dstUserName)
+
+对应的消息格式为
+
+{
+
+​	method：“chat”，
+
+​	param{
+
+​		chatType：0，
+
+​		data：“xxx”,
+
+​	}	
+
+}
+
+| 参数名   | 参数含义                 | 参数类型 | 必选 |
+| -------- | ------------------------ | -------- | ---- |
+| chatType | 表明此次传输的消息的类型 | uint     | 是   |
+| data     | 表明此次传输的消息的内容 | String   | 是   |
 
 （4）群聊
 
-（5）用户管理
+String groupChat(const String userName, const String userPasswd)
 
-#### 2.  类与类之间的依赖关系
+对应的消息格式为
+
+{
+
+​	method：“chat”，
+
+​	param{
+
+​		chatType：1，
+
+​		data：“xxx”,
+
+​	}	
+
+}
+
+| 参数名   | 参数含义                 | 参数类型 | 必选 |
+| -------- | ------------------------ | -------- | ---- |
+| chatType | 表明此次传输的消息的类型 | uint     | 是   |
+| data     | 表明此次传输的消息的内容 | String   | 是   |
+
+#### 3.  类与类之间的依赖关系
 
