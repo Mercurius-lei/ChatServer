@@ -66,7 +66,7 @@
 
 > 名字：消息编号
 >
-> 别名：用户ID
+> 别名：消息ID
 >
 > 描述：唯一地标识用户发出的一条消息
 >
@@ -167,20 +167,25 @@ Bool userRegister(const String userID, const String userPasswd)
 
 ​		userPasswd:"bbb",
 
-​	}	
+​	}
 
 }
 
-| 参数名     | 参数含义                   | 参数类型 | 必选 |
-| ---------- | -------------------------- | -------- | ---- |
-| userName   | 表明传输此消息的用户名     | String   | 是   |
-| userPasswd | 表明传输此消息的用户的密码 | String   | 是   |
+| 参数名     | 参数含义                     | 参数类型 | 必选 |
+| ---------- | ---------------------------- | -------- | ---- |
+| userName   | 表明发起该注册请求的用户ID   | String   | 是   |
+| userPasswd | 表明发起该注册请求的用户密码 | String   | 是   |
+
+| 返回值 | 返回值含义 | 返回值类型 |
+| ------ | ---------- | ---------- |
+| TRUE   | 注册成功   | Bool       |
+| FALSE  | 注册失败   | Bool       |
 
 （2）登录
 
 Bool userLogin(const String userID, const String userPasswd)
 
-对应的消息格式为
+收到的消息格式为
 
 {
 
@@ -196,16 +201,21 @@ Bool userLogin(const String userID, const String userPasswd)
 
 }
 
-| 参数名     | 参数含义                   | 参数类型 | 必选 |
-| ---------- | -------------------------- | -------- | ---- |
-| userName   | 表明传输此消息的用户名     | String   | 是   |
-| userPasswd | 表明传输此消息的用户的密码 | String   | 是   |
+| 参数名     | 参数含义                     | 参数类型 | 必选 |
+| ---------- | ---------------------------- | -------- | ---- |
+| userName   | 表明发起该登陆请求的用户ID   | String   | 是   |
+| userPasswd | 表明发起该登陆请求的用户密码 | String   | 是   |
+
+| 返回值 | 返回值含义 | 返回值类型 |
+| ------ | ---------- | ---------- |
+| TRUE   | 登录成功   | Bool       |
+| FALSE  | 登录失败   | Bool       |
 
 （3）单聊
 
-String personalChat(const String srcUserID, const String data, const String dstUserName)
+String personalChat(const String srcUserID,  const String dstUserID, const String data)
 
-对应的消息格式为
+收到的消息格式为
 
 {
 
@@ -221,14 +231,26 @@ String personalChat(const String srcUserID, const String data, const String dstU
 
 }
 
-| 参数名   | 参数含义                 | 参数类型 | 必选 |
-| -------- | ------------------------ | -------- | ---- |
-| chatType | 表明此次传输的消息的类型 | uint     | 是   |
-| data     | 表明此次传输的消息的内容 | String   | 是   |
+其中chatType表明聊天的类型，说明如下：
+
+| chatType取值 | 值含义 | 值类型 |
+| ------------ | ------ | ------ |
+| 0            | 单聊   | int    |
+| 1            | 群聊   | int    |
+
+| 参数名    | 参数含义                 | 参数类型 | 必选 |
+| --------- | ------------------------ | -------- | ---- |
+| srcUserID | 表明发送该消息的用户ID   | String   | 是   |
+| dstUserID | 表明接收该消息的用户ID   | String   | 是   |
+| data      | 表明此次传输的消息的内容 | String   | 是   |
+
+| 返回值     | 返回值含义             | 返回值类型 |
+| ---------- | ---------------------- | ---------- |
+| serverTime | 服务器接收该消息的时间 | String     |
 
 （4）群聊
 
-String groupChat(const String userName, const String userPasswd)
+String groupChat(const String srcUserID,  const String groupID, const String data)
 
 对应的消息格式为
 
@@ -246,10 +268,17 @@ String groupChat(const String userName, const String userPasswd)
 
 }
 
-| 参数名   | 参数含义                 | 参数类型 | 必选 |
-| -------- | ------------------------ | -------- | ---- |
-| chatType | 表明此次传输的消息的类型 | uint     | 是   |
-| data     | 表明此次传输的消息的内容 | String   | 是   |
+| 参数名    | 参数含义                 | 参数类型 | 必选 |
+| --------- | ------------------------ | -------- | ---- |
+| srcUserID | 表明发送该消息的用户ID   | String   | 是   |
+| groupID   | 表明接收该消息的群组ID   | String   | 是   |
+| data      | 表明此次传输的消息的内容 | String   | 是   |
 
-#### 3.  类与类之间的依赖关系
+| 返回值     | 返回值含义             | 返回值类型 |
+| ---------- | ---------------------- | ---------- |
+| serverTime | 服务器接收该消息的时间 | String     |
+
+[^]: 3.  类与类之间的依赖关系
+
+#### 
 
