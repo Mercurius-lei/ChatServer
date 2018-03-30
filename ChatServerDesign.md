@@ -50,7 +50,7 @@
 
 #### 2.  数据要求
 
-（1） 数据元素：主要包括用户编号、消息编号等。
+数据元素：主要包括用户编号、群组编号等。
 
 > 名字：用户编号
 >
@@ -64,17 +64,17 @@
 >
 > ​            用户数据库
 
-> 名字：消息编号
+> 名字：群组编号
 >
-> 别名：消息ID
+> 别名：群ID
 >
-> 描述：唯一地标识用户发出的一条消息
+> 描述：唯一地标识使用聊天通信应用软件的一个群组
 >
 > 定义：消息编号=1{字符}8
 >
 > 位置：消息
-
-（2）数据结构层次
+>
+> ​	    群组数据库
 
 ### 二、 整体设计
 
@@ -114,18 +114,6 @@
 
 ​									图2.4 用户聊天
 
-（4）用户管理模块
-
-​	用户管理模块主要包括添加用户和删除用户两部分，分别如图2.5和图2.6。系统管理员处理用户注册申请列表，对列表中的合法用户，同意其注册申请，并将其信息写入用户数据库中；对列表中的非法用户，拒绝其注册申请。当系统中的某位用户因故离开时，系统管理员应该及时从用户数据库中删除其信息。
-
-![IPO（用户注册）](jpg/IPO（用户添加）.jpg)
-
-​									图2.5 添加用户
-
-![IPO（用户注册）](jpg/IPO（用户删除）.jpg)
-
-​									图2.6 删除用户
-
 ### 三、详细设计
 
 #### 1.  消息格式
@@ -134,9 +122,9 @@
 
 {
 
-​	method：“xxx”，
+​	method : "xxx",
 
-​	param{
+​	param : {
 
 ​		...
 
@@ -149,23 +137,95 @@
 | method | 表明此次传输的消息的用途 | String   | 是   |
 | param  | 表明此次传输的消息的内容 |          |      |
 
-#### 2.接口定义
+#### 2.数据库定义
+
+数据库采用ElasticSearch，共分为用户数据库和群组数据库。
+
+（1）用户数据库格式为：
+
+{
+
+userID: "xxx",
+
+userPasswd: "yyy",
+
+joinedGroup: ["aaa", "bbb", "ccc"],
+
+unreadMessage: [],
+
+lastLoginTime: "zzz"
+
+}
+
+其中，userID、userPasswd和lastLoginTime均是string类型，joinedGroup和unreadMessage是数组类型。
+
+- userID表示用户的唯一标识；
+
+- userPasswd表示用户密码；
+
+- joinedGroup表示该用户加入的所有群组，如上表明用户加入了aaa、bbb、ccc三个群组；
+
+- unreadMessage表示用户的个人未读消息，其每个元素组成为：
+
+  {
+
+  ​	senderID: { sendTime1: data1, sendTime2: data2, ...}
+
+  }
+
+  senderID表示消息的发送者ID，sendTime表示消息发送的时间（以服务器收到该消息为准）， data表明此次消息的内容。
+
+- lastLoginTime表示用户上一次退出系统的时间。
+
+（2）群组数据库格式为：
+
+{
+
+groupID: "xxx",
+
+member: ["aaa", "bbb", "ccc"],
+
+message: []
+
+}
+
+其中，groupID是string类型，member和message都是数组类型。
+
+- groupID表示群组的唯一标识；
+
+- member表示该群组的所有用户，如上表明群组有aaa、bbb、ccc三个用户；
+
+- message表示该群组的所有消息，其每个元素组成为：
+
+  {
+
+  ​	sentTime1: {sender1: data1},
+
+  ​	sentTime2: {sender2: data2},
+
+  ​	...
+
+  }
+
+  sentTime、sender、data含义同用户数据库。
+
+#### 3.接口定义
 
 （1）注册
 
-Bool userRegister(const String userID, const String userPasswd)
+bool userRegister(const string userID, const string userPasswd)
 
 收到的消息格式为
 
 {
 
-​	method：“login”，
+​	method : "login",
 
-​	param{
+​	param : {
 
 ​		userName: "aaa",
 
-​		userPasswd:"bbb",
+​		userPasswd: "bbb"
 
 ​	}
 
@@ -173,29 +233,29 @@ Bool userRegister(const String userID, const String userPasswd)
 
 | 参数名     | 参数含义                     | 参数类型 | 必选 |
 | ---------- | ---------------------------- | -------- | ---- |
-| userName   | 表明发起该注册请求的用户ID   | String   | 是   |
-| userPasswd | 表明发起该注册请求的用户密码 | String   | 是   |
+| userName   | 表明发起该注册请求的用户ID   | string   | 是   |
+| userPasswd | 表明发起该注册请求的用户密码 | string   | 是   |
 
 | 返回值 | 返回值含义 | 返回值类型 |
 | ------ | ---------- | ---------- |
-| TRUE   | 注册成功   | Bool       |
-| FALSE  | 注册失败   | Bool       |
+| TRUE   | 注册成功   | bool       |
+| FALSE  | 注册失败   | bool       |
 
 （2）登录
 
-Bool userLogin(const String userID, const String userPasswd)
+bool userLogin(const string userID, const string userPasswd)
 
 收到的消息格式为
 
 {
 
-​	method：“register”，
+​	method : "register",
 
-​	param{
+​	param : {
 
-​		userName: "aaa",
+​		userName: "xxx",
 
-​		userPasswd:"bbb",
+​		userPasswd:"xxx"
 
 ​	}	
 
@@ -203,82 +263,79 @@ Bool userLogin(const String userID, const String userPasswd)
 
 | 参数名     | 参数含义                     | 参数类型 | 必选 |
 | ---------- | ---------------------------- | -------- | ---- |
-| userName   | 表明发起该登陆请求的用户ID   | String   | 是   |
-| userPasswd | 表明发起该登陆请求的用户密码 | String   | 是   |
+| userName   | 表明发起该登陆请求的用户ID   | string   | 是   |
+| userPasswd | 表明发起该登陆请求的用户密码 | string   | 是   |
 
 | 返回值 | 返回值含义 | 返回值类型 |
 | ------ | ---------- | ---------- |
-| TRUE   | 登录成功   | Bool       |
-| FALSE  | 登录失败   | Bool       |
+| TRUE   | 登录成功   | bool       |
+| FALSE  | 登录失败   | bool       |
+
+在函数返回之前，服务器会传送一些数据给客户端，如下：
+
+- 聊天系统中的所有用户， 格式同群组数据库定义中的member；
+- 用户加入的所有群组，同用户数据库定义中的joinedGroup；
+- 用户的未读个人消息，同用户数据库定义中的unreadMessage；
+- 用户的未读群组消息，格式同群组数据库定义中的message。
 
 （3）单聊
 
-String personalChat(const String srcUserID,  const String dstUserID, const String data)
+string personalChat(const string srcUserID, const string dstUserID, const string data)
 
 收到的消息格式为
 
 {
 
-​	method：“chat”，
+​	method : "personChat",
 
-​	param{
+​	param : {
 
-​		chatType：0，
+​		dstUserID: "xxx",
 
-​		data：“xxx”,
+​		data: "xxx"
 
 ​	}	
 
 }
 
-其中chatType表明聊天的类型，说明如下：
-
-| chatType取值 | 值含义 | 值类型 |
-| ------------ | ------ | ------ |
-| 0            | 单聊   | int    |
-| 1            | 群聊   | int    |
-
 | 参数名    | 参数含义                 | 参数类型 | 必选 |
 | --------- | ------------------------ | -------- | ---- |
-| srcUserID | 表明发送该消息的用户ID   | String   | 是   |
-| dstUserID | 表明接收该消息的用户ID   | String   | 是   |
-| data      | 表明此次传输的消息的内容 | String   | 是   |
+| srcUserID | 表明发送该消息的用户ID   | string   | 是   |
+| dstUserID | 表明接收该消息的用户ID   | string   | 是   |
+| data      | 表明此次传输的消息的内容 | string   | 是   |
 
 | 返回值     | 返回值含义             | 返回值类型 |
 | ---------- | ---------------------- | ---------- |
-| serverTime | 服务器接收该消息的时间 | String     |
+| serverTime | 服务器接收该消息的时间 | string     |
+| fail       | 消息发送失败           | string     |
 
 （4）群聊
 
-String groupChat(const String srcUserID,  const String groupID, const String data)
+string groupChat(const string srcUserID, const string groupID, const string data)
 
 对应的消息格式为
 
 {
 
-​	method：“chat”，
+​	method: "chat",
 
-​	param{
+​	param : {
 
-​		chatType：1，
+​		groupID: "xxx",
 
-​		data：“xxx”,
+​		data: "xxx"
 
-​	}	
+​	}
 
 }
 
 | 参数名    | 参数含义                 | 参数类型 | 必选 |
 | --------- | ------------------------ | -------- | ---- |
-| srcUserID | 表明发送该消息的用户ID   | String   | 是   |
-| groupID   | 表明接收该消息的群组ID   | String   | 是   |
-| data      | 表明此次传输的消息的内容 | String   | 是   |
+| srcUserID | 表明发送该消息的用户ID   | string   | 是   |
+| groupID   | 表明接收该消息的群组ID   | string   | 是   |
+| data      | 表明此次传输的消息的内容 | string   | 是   |
 
 | 返回值     | 返回值含义             | 返回值类型 |
 | ---------- | ---------------------- | ---------- |
-| serverTime | 服务器接收该消息的时间 | String     |
-
-[^]: 3.  类与类之间的依赖关系
-
-#### 
-
+| serverTime | 服务器接收该消息的时间 | string     |
+| fail       | 消息发送失败           | string     |
